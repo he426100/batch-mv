@@ -1,5 +1,5 @@
 # batch-mv  
-批量移动文件工具  
+批量移动文件工具，基于swoole/swow协程实现并发`mv`，可限制并发数量    
 
 ## swoole-mv  
 需要[swoole-cli](https://github.com/swoole/swoole-src/releases/download/v5.0.1/swoole-cli-v5.0.1-linux-x64.tar.xz)  
