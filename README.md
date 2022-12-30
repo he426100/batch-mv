@@ -1,12 +1,12 @@
 # batch-mv  
 批量移动文件工具  
 
-## swoole  
+## swoole-mv  
 需要[swoole-cli](https://github.com/swoole/swoole-src/releases/download/v5.0.1/swoole-cli-v5.0.1-linux-x64.tar.xz)  
 
 ### 使用  
 ```
-➜  swoole-cli swoole.php /opt/test/source /opt/test/dest "*.img" 2
+➜  swoole-cli swoole-mv.php /opt/test/source /opt/test/dest "*.img" 2
 确认mv /opt/test/source/*.img 到 /opt/test/dest 吗？(yes/no) [no]
 yes
 2022-12-16 13:43:27 mv /opt/test/source/1.img /opt/test/dest/1.img.tmp && mv /opt/test/dest/1.img.tmp /opt/test/dest/1.img
@@ -15,12 +15,12 @@ yes
 # 不想确认可以在前面加 echo yes | 
 ```
 
-## swow  
+## swow-mv  
 需要swow扩展，可在 [https://github.com/dixyes/lwmbs/actions](https://github.com/dixyes/lwmbs/actions) 下载静态编译的php
 
 ### 使用  
 ```
-➜  php swow.php /opt/test/source /opt/test/dest "*.img" 2
+➜  php swow-mv.php /opt/test/source /opt/test/dest "*.img" 2
 确认mv /opt/test/source/*.img 到 /opt/test/dest 吗？(yes/no) [no]
 yes
 2022-12-16 15:32:41 mv /opt/test/source/1.img /opt/test/dest1.img.tmp && mv /opt/test/dest1.img.tmp /opt/test/dest1.img
