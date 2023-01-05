@@ -20,7 +20,7 @@ run(function () {
     $parallelNumber = $argv[4] ?? 3;
 
     if (empty($sourcePath) || empty($destPath)) {
-        echo '请输入源路径和目的路径', PHP_EOL;
+        echo '使用方法: ' . PHP_EOL . 'batch-mv source dest name [parallel-num]', PHP_EOL;
         return;
     }
     if (!file_exists($sourcePath) || !file_exists($destPath)) {
