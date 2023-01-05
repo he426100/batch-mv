@@ -17,7 +17,7 @@ $namePattern = $argv[3] ?? '*';
 $parallelNumber = $argv[4] ?? 3;
 
 if (empty($sourcePath) || empty($destPath)) {
-    echo '使用方法: ' . PHP_EOL . 'batch-mv source dest name [parallel-num]', PHP_EOL;
+    echo '使用方法: ' . PHP_EOL . 'batch-mv 源路径 目的路径 文件名 [并发数量]', PHP_EOL;
     return;
 }
 if (!file_exists($sourcePath) || !file_exists($destPath)) {
