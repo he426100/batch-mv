@@ -17,7 +17,7 @@ $namePattern = $argv[3] ?? '*';
 $parallelNumber = $argv[4] ?? 3;
 
 if (empty($sourcePath) || empty($destPath)) {
-    echo '使用方法: ' . PHP_EOL . 'batch-mv 源路径 目的路径 文件名 [并发数量]', PHP_EOL;
+    echo '使用方法: ' . PHP_EOL . 'swow-mv 源路径 目的路径 文件名 [并发数量]', PHP_EOL;
     return;
 }
 if (!file_exists($sourcePath) || !file_exists($destPath)) {
@@ -25,7 +25,12 @@ if (!file_exists($sourcePath) || !file_exists($destPath)) {
     return;
 }
 
-echo '确认mv ' . $sourcePath . '/' . $namePattern . ' 到 ' . $destPath . ' 吗？(yes/no) [no]', PHP_EOL;
+if (is_file($namePattern)) {
+    echo '确认按 ' . $namePattern . ' mv ' . $sourcePath . ' 到 ' . $destPath . ' 吗？(yes/no) [no]', PHP_EOL;
+} else {
+    echo '确认mv ' . $sourcePath . '/' . $namePattern . ' 到 ' . $destPath . ' 吗？(yes/no) [no]', PHP_EOL;
+}
+
 $input = rtrim(fgets(STDIN));
 if ($input != 'yes') {
     echo '已取消', PHP_EOL;
@@ -35,7 +40,7 @@ if ($input != 'yes') {
 $wr = new WaitReference();
 
 $chan = new Channel($parallelNumber);
-$files = glob($sourcePath . '/' . $namePattern);
+$files = is_file($namePattern) ? getList($namePattern) : glob($sourcePath . '/' . $namePattern);
 foreach ($files as $v) {
     $chan->push(true);
     Coroutine::run(static function () use ($wr, $chan, $v, $destPath) {
@@ -67,3 +72,21 @@ foreach ($files as $v) {
 }
 
 WaitReference::wait($wr);
+
+function getList(string $file): array
+{
+    $list = [];
+    $file = new SplFileObject($file, 'r');
+    $file->setFlags(SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
+    while (!$file->eof()) {
+        $line = $file->fgets();
+        if (empty($line)) {
+            continue;
+        }
+        if (!is_file($line)) {
+        	throw new \Exception($line . ' not exists');
+        }
+        $list[] = $line;
+    }
+    return $list;
+}
