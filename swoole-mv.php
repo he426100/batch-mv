@@ -44,8 +44,8 @@ run(function () {
                 $source = $v;
                 $file = basename($v);
                 $size = filesize($v);
-                $dest1 = $destPath . "/${file}.tmp";
-                $dest2 = $destPath . "/${file}";
+                $dest1 = $destPath . "/{$file}.tmp";
+                $dest2 = $destPath . "/{$file}";
 
                 $start = time();
                 $cmd = "mv $source $dest1 && mv $dest1 $dest2";
