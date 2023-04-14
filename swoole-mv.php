@@ -18,9 +18,10 @@ run(function () {
     $destPath = $argv[2] ?? '';
     $namePattern = $argv[3] ?? '*';
     $parallelNumber = $argv[4] ?? 3;
+    $watch = $argv[5] ?? 0;
 
     if (empty($sourcePath) || empty($destPath)) {
-        echo '使用方法: ' . PHP_EOL . 'swoole-mv 源路径 目的路径 文件名 [并发数量]', PHP_EOL;
+        echo '使用方法: ' . PHP_EOL . 'swoole-mv 源路径 目的路径 文件名 [并发数量] [是否监听]', PHP_EOL;
         return;
     }
     if (!file_exists($sourcePath) || !file_exists($destPath)) {
@@ -40,11 +41,33 @@ run(function () {
         return;
     }
 
+    if ($watch && !is_file($namePattern)) {
+        while (1) {
+            echo date('Y-m-d H:i:s') . ' start moving...', PHP_EOL;
+            move($sourcePath, $destPath, $namePattern, $parallelNumber);
+            sleep(60);
+        }
+    } else {
+        echo date('Y-m-d H:i:s') . ' start moving...', PHP_EOL;
+        move($sourcePath, $destPath, $namePattern, $parallelNumber);
+    }
+});
+
+function move($sourcePath, $destPath, $namePattern, $parallelNumber)
+{
+    static $tasks = [];
     $chan = new Channel($parallelNumber);
     $files = is_file($namePattern) ? getList($namePattern) : glob($sourcePath . '/' . $namePattern);
     foreach ($files as $v) {
+        // 防止对同一个文件并发操作
+        if (isset($tasks[$v])) {
+            echo date('Y-m-d H:i:s') . ' ' . $v . ' moving', PHP_EOL;
+            continue;
+        }
+        $tasks[$v] = 1;
+
         $chan->push(true);
-        go(function () use ($chan, $v, $destPath) {
+        go(function () use ($chan, $v, $destPath, &$tasks) {
             try {
                 $source = $v;
                 $file = basename($v);
@@ -67,11 +90,12 @@ run(function () {
             } catch (Throwable $throwable) {
                 echo date('Y-m-d H:i:s') . ' ' . $throwable->getMessage(), PHP_EOL;
             } finally {
+                unset($tasks[$v]);
                 $chan->pop();
             }
         });
     }
-});
+}
 
 function getList(string $file): array
 {
@@ -84,7 +108,7 @@ function getList(string $file): array
             continue;
         }
         if (!is_file($line)) {
-        	throw new \Exception($line . ' not exists');
+            throw new \Exception($line . ' not exists');
         }
         $list[] = $line;
     }

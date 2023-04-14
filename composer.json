@@ -1,0 +1,6 @@
+{
+    "require-dev": {
+        "swoole/ide-helper": "^5.0",
+        "swow/swow": "^1.2"
+    }
+}
