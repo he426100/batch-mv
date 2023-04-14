@@ -9,12 +9,16 @@ date_default_timezone_set('Asia/Shanghai');
 
 use Swoole\Coroutine\System;
 use Swoole\Coroutine\Channel;
-use Swoole\Coroutine\Barrier;
 use function Swoole\Coroutine\run;
 use function Swoole\Coroutine\go;
 
+// mv list
+$tasks = [];
+$chan = null;
+
 run(function () {
-    global $argv;
+    global $argv, $chan;
+
     $sourcePath = $argv[1] ?? '';
     $destPath = $argv[2] ?? '';
     $namePattern = $argv[3] ?? '*';
@@ -42,34 +46,34 @@ run(function () {
         return;
     }
 
+    $chan = new Channel($parallelNumber);
     if ($watch && !is_file($namePattern)) {
         while (1) {
             echo date('Y-m-d H:i:s') . ' start moving...', PHP_EOL;
-            move($sourcePath, $destPath, $namePattern, $parallelNumber);
+            move($sourcePath, $destPath, $namePattern);
             sleep(60);
         }
     } else {
         echo date('Y-m-d H:i:s') . ' start moving...', PHP_EOL;
-        move($sourcePath, $destPath, $namePattern, $parallelNumber);
+        move($sourcePath, $destPath, $namePattern);
     }
 });
 
-function move($sourcePath, $destPath, $namePattern, $parallelNumber)
+function move($sourcePath, $destPath, $namePattern)
 {
-    static $tasks = [];
-    $barrier = Barrier::make();
-    $chan = new Channel($parallelNumber);
+    global $tasks, $chan;
+
     $files = is_file($namePattern) ? getList($namePattern) : glob($sourcePath . '/' . $namePattern);
     foreach ($files as $v) {
         // 防止对同一个文件并发操作
         if (isset($tasks[$v])) {
-            echo date('Y-m-d H:i:s') . ' ' . $v . ' moving', PHP_EOL;
+            // echo date('Y-m-d H:i:s') . ' ' . $v . ' moving', PHP_EOL;
             continue;
         }
         $tasks[$v] = 1;
 
         $chan->push(true);
-        go(function () use ($barrier, $chan, $v, $destPath, &$tasks) {
+        go(function () use ($chan, $v, $destPath, &$tasks) {
             try {
                 $source = $v;
                 $file = basename($v);
@@ -97,7 +101,6 @@ function move($sourcePath, $destPath, $namePattern, $parallelNumber)
             }
         });
     }
-    Barrier::wait($barrier);
 }
 
 function getList(string $file): array
