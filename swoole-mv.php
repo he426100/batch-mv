@@ -9,6 +9,7 @@ date_default_timezone_set('Asia/Shanghai');
 
 use Swoole\Coroutine\System;
 use Swoole\Coroutine\Channel;
+use Swoole\Coroutine\Barrier;
 use function Swoole\Coroutine\run;
 use function Swoole\Coroutine\go;
 
@@ -56,6 +57,7 @@ run(function () {
 function move($sourcePath, $destPath, $namePattern, $parallelNumber)
 {
     static $tasks = [];
+    $barrier = Barrier::make();
     $chan = new Channel($parallelNumber);
     $files = is_file($namePattern) ? getList($namePattern) : glob($sourcePath . '/' . $namePattern);
     foreach ($files as $v) {
@@ -67,7 +69,7 @@ function move($sourcePath, $destPath, $namePattern, $parallelNumber)
         $tasks[$v] = 1;
 
         $chan->push(true);
-        go(function () use ($chan, $v, $destPath, &$tasks) {
+        go(function () use ($barrier, $chan, $v, $destPath, &$tasks) {
             try {
                 $source = $v;
                 $file = basename($v);
@@ -95,6 +97,7 @@ function move($sourcePath, $destPath, $namePattern, $parallelNumber)
             }
         });
     }
+    Barrier::wait($barrier);
 }
 
 function getList(string $file): array
